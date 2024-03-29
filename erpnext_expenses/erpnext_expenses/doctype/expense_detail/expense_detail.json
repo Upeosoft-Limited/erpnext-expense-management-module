@@ -1,0 +1,70 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-03-29 17:57:39.858315",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "expense_id",
+  "expense_date",
+  "category",
+  "description",
+  "taxes",
+  "subtotal"
+ ],
+ "fields": [
+  {
+   "fieldname": "expense_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Expense Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Category",
+   "options": "Expense Category"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Description"
+  },
+  {
+   "fieldname": "taxes",
+   "fieldtype": "Table MultiSelect",
+   "label": "Taxes",
+   "options": "Expense Taxes Detail"
+  },
+  {
+   "fieldname": "subtotal",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Subtotal",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "expense_id",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Expense ID",
+   "options": "Expense"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-03-29 19:36:48.921218",
+ "modified_by": "Administrator",
+ "module": "Erpnext Expenses",
+ "name": "Expense Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

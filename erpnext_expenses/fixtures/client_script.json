@@ -1,0 +1,13 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Client Script",
+  "dt": "Expense",
+  "enabled": 1,
+  "modified": "2024-03-29 23:26:18.904399",
+  "module": "Erpnext Expenses",
+  "name": "Bulk Expense Report",
+  "script": "frappe.listview_settings['Expense'] = {\n    onload(listview) {\n        listview.page.add_action_item('My custom Action', () => my_action_handler());\n        listview.page.set_secondary_action('Create Report', function(){\n            \n            let checkedItems = frappe.get_list_view('Expense').get_checked_items();\n            \n            if(checkedItems.length != 0){\n                frappe.show_progress('Processing entries...', 70, 100, 'Please wait.');\n            \n                frappe.call({\n                    args: {\n                        'selected': checkedItems\n                    },\n                    method: 'erpnext_expenses.erpnext_expenses.doctype.expense.expense.create_bulk_expense_report',\n                    callback: function(r) {\n                        frappe.show_progress('Processing entries...', 100, 100);\n                        frappe.set_route(\"Form\", \"Expense Report\", r.message.expense);\n                    }\n                });\n            }else{\n                frappe.throw('Please select at least one expense from the list.');\n            }\n            \n        } );\n  }\n};\n",
+  "view": "List"
+ }
+]

@@ -1,0 +1,65 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2024-03-29 16:28:10.811083",
+  "name": "Review",
+  "workflow_action_name": "Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2024-03-29 19:15:34.416035",
+  "name": "Submit",
+  "workflow_action_name": "Submit"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2024-03-29 21:07:05.259743",
+  "name": "Create Journal Entries",
+  "workflow_action_name": "Create Journal Entries"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2024-03-29 16:28:10.809989",
+  "name": "Reject",
+  "workflow_action_name": "Reject"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2024-03-29 16:28:10.808386",
+  "name": "Approve",
+  "workflow_action_name": "Approve"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2024-03-29 17:35:26.699276",
+  "name": "Request Amendment",
+  "workflow_action_name": "Request Amendment"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2024-03-29 17:20:45.472746",
+  "name": "Submit to Manager",
+  "workflow_action_name": "Submit to Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2024-03-29 17:22:13.598682",
+  "name": "Submit to Finance",
+  "workflow_action_name": "Submit to Finance"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2024-03-29 17:24:23.560509",
+  "name": "Recall",
+  "workflow_action_name": "Recall"
+ }
+]
