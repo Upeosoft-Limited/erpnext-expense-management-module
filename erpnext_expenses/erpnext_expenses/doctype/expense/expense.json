@@ -11,7 +11,6 @@
   "category",
   "total",
   "paid_by",
-  "included_taxes",
   "column_break_jsim",
   "expense_date",
   "employee",
@@ -79,12 +78,6 @@
    "label": "Total",
    "non_negative": 1,
    "reqd": 1
-  },
-  {
-   "fieldname": "included_taxes",
-   "fieldtype": "Table MultiSelect",
-   "label": "Included Taxes",
-   "options": "Expense Taxes Detail"
   },
   {
    "allow_in_quick_entry": 1,
@@ -156,7 +149,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-03-30 15:38:20.714816",
+ "modified": "2024-04-01 13:14:20.227282",
  "modified_by": "Administrator",
  "module": "Erpnext Expenses",
  "name": "Expense",

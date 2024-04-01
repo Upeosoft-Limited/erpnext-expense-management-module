@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "tax_description",
+  "tax_account",
   "column_break_pzbc",
   "tax_percentage"
  ],
@@ -34,11 +35,17 @@
    "label": "Tax Percentage",
    "non_negative": 1,
    "reqd": 1
+  },
+  {
+   "fieldname": "tax_account",
+   "fieldtype": "Link",
+   "label": "Tax Account",
+   "options": "Account"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-03-29 15:10:44.009970",
+ "modified": "2024-04-01 12:16:08.918330",
  "modified_by": "Administrator",
  "module": "Erpnext Expenses",
  "name": "Expense Taxes",

@@ -51,7 +51,6 @@ frappe.ui.form.on("Expense", {
                 }
             });
         }
-
     },
 
     validate: function(frm) {
@@ -66,6 +65,14 @@ frappe.ui.form.on("Expense", {
 
             console.log(total)
         });
+    },
+
+    expense_date: function(frm){
+        if(frm.doc.expense_date > frappe.datetime.nowdate()){
+            frappe.msgprint(__('The <b>expense date</b> cannot be in the future.'));
+            frappe.validated = false
+            frm.set_value('expense_date', '')
+        }
     }
 
 });
@@ -86,6 +93,31 @@ frappe.ui.form.on("Expense Splitting Detail", "amount", function(frm, cdt, cdn) 
 
 });
 
+frappe.ui.form.on("Expense Splitting Detail", "vat", function(frm, cdt, cdn) {
+
+    let item = locals[cdt][cdn];
+
+    if(item.vat){
+
+        let amount = item.amount;
+        
+        frappe.db.get_doc('Expense Taxes', null, {name: item.vat} )
+            .then(doc => {
+                let vat_amount = (item.amount * doc.tax_percentage) / 100
+
+                item.vat_amount = vat_amount;
+                frm.refresh_field('table_jkwj');
+            });
+
+            
+
+    }else{
+        item.vat_amount = '';
+        frm.refresh_field('table_jkwj');
+    }
+
+});
+
 
 // Function to calculate total amount in the child table
 function calculateTotalAmount(frm, total_expense_amount) {
@@ -97,7 +129,6 @@ function calculateTotalAmount(frm, total_expense_amount) {
     frm.doc.table_jkwj.forEach(function(item) {
         if(item.amount) {
             hasValue = true;
-
             // Sum up the amount field of each row
             total_amount += item.amount;
         }
