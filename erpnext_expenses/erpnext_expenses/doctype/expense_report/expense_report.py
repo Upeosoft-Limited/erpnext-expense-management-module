@@ -1,117 +1,173 @@
+# -*- coding: utf-8 -*-
+
+from typing import Dict, List, Any, Optional
 import frappe
 from frappe.model.document import Document
 from frappe.utils import nowdate
 
 
 class ExpenseReport(Document):
-    pass
+    def on_cancel(self) -> None:
+        """Cancela el Asiento Contable asociado cuando se cancela el Reporte de Gastos"""
+        # Si existe un Journal Entry vinculado, cancelarlo
+        # Usar get() para compatibilidad con documentos antiguos
+        journal_entry = self.get("journal_entry")
+        if journal_entry:
+            try:
+                je_doc = frappe.get_doc('Journal Entry', journal_entry)
+                if je_doc.docstatus == 1:  # Solo si está enviado
+                    # Ignorar validación de links para evitar dependencia circular
+                    je_doc.flags.ignore_links = True
+                    self.journal_entry = None
+                    je_doc.cancel()
+                    frappe.msgprint(f"El Asiento Contable {journal_entry} ha sido cancelado")
+            except Exception as e:
+                frappe.log_error(f"Error cancelando Asiento Contable {journal_entry}: {str(e)}")
+                frappe.throw(f"No se pudo cancelar el Asiento Contable {journal_entry}. Por favor cancélelo manualmente.")
 
 
 @frappe.whitelist()
-def create_journal_entries(report):
+def create_journal_entries(report: str) -> Dict[str, Any]:
+    """
+    Crea los asientos contables (Journal Entry) para un Expense Report aprobado
+
+    Args:
+        report (str): Nombre del Expense Report
+    """
+    jv = None
     try:
-        fields = [
-            'company',
-            'paying_account'
-        ]
+        expense_report = _get_expense_report_data(report)
 
-        expense_report = frappe.db.get_all('Expense Report', filters={'name': report}, fields=fields)[0]
+        if not expense_report.paying_account:
+            frappe.throw("Debe seleccionar una Cuenta de Pago antes de crear los asientos contables")
 
-        # Get all the expense IDs for the expenses in the report
-        report_expenses = frappe.db.get_all('Expense Detail', filters={'parent': report}, fields=['expense_id'])
+        expense_total = _calculate_expense_total(report)
 
-        # Dictionary to store tax amounts for each tax type
-        tax_amounts = {}
+        if expense_total <= 0:
+            frappe.throw("El total de gastos debe ser mayor a cero")
 
-        # Iterate through each expense to calculate tax amounts
-        for report_expense in report_expenses:
-            expense_vat = frappe.db.get_all('Expense Splitting Detail', filters={'parent': report_expense.expense_id}, fields=['vat', 'vat_amount'])
+        expense_accounts = _get_expense_accounts(report)
 
-            for tax_exists in expense_vat:
-                if tax_exists.vat_amount > 0:
-                    # Get the tax account associated with the tax found
-                    tax_account = frappe.db.get_value('Expense Taxes', tax_exists.vat, ['tax_account'])
+        if not expense_accounts:
+            frappe.throw("No se encontraron cuentas de gasto. Verifique que los gastos tengan categorías asignadas.")
 
-                    # Add tax amount to the corresponding tax type in the dictionary
-                    if tax_account not in tax_amounts:
-                        tax_amounts[tax_account] = 0
-                    tax_amounts[tax_account] += tax_exists.vat_amount
+        jv = _create_journal_entry_doc(expense_report, report, expense_total)
 
-        # Get the associated expense value from the expenses child table
-        expense = frappe.db.get_all('Expense Detail', filters={'parent': report}, fields=['expense_id', 'subtotal', 'description'])
-
-        expense_total = 0
-        for item in expense:
-            expense_total += item.subtotal
-
-        # Create the journal entries
-        jv = frappe.new_doc('Journal Entry')
-        jv.voucher_type = 'Journal Entry'
-        jv.naming_series = 'ACC-JV-.YYYY.-'
-        jv.posting_date = nowdate()
-        jv.company = expense_report.company
-        jv.remark = expense_report.description
-
-        # Entry to the Credit Side
-        jv.append('accounts', {
-            'account': expense_report.paying_account,
-            'credit': float(expense_total),
-            'debit': float(0),
-            'debit_in_account_currency': float(0),
-            'credit_in_account_currency': float(expense_total),
-        })
-
-        # Entry to the Debit Side for each expense category
-        expense_account_sql = f"""
-            SELECT
-                ec.expense_account,
-                ed.subtotal
-            FROM 
-                `tabExpense Category` ec
-            JOIN 
-                `tabExpense` e 
-            ON 
-                ec.name = e.category
-            JOIN 
-                `tabExpense Detail` ed 
-            ON 
-                e.name = ed.expense_id
-            WHERE 
-                ed.parent = '{report}';
-        """
-
-        expense_account = frappe.db.sql(expense_account_sql, as_dict=True)
-
-        for acc in expense_account:
-            amount_less_tax = acc.subtotal - sum(tax_amounts.values())
-            # Entry to the Debit Side
-            jv.append('accounts', {
-                'account': acc.expense_account,
-                'debit': float(amount_less_tax),
-                'credit': float(0),
-                'credit_in_account_currency': float(0),
-                'debit_in_account_currency': float(amount_less_tax)
-            })
-
-        # Entry to the tax accounts
-        for tax_account, tax_amount in tax_amounts.items():
-            jv.append('accounts', {
-                'account': tax_account,
-                'debit': float(tax_amount),
-                'credit': float(0),
-                'credit_in_account_currency': float(0),
-                'debit_in_account_currency': float(tax_amount)
-            })
+        _add_expense_account_entries(jv, expense_accounts)
 
         jv.save()
         jv.submit()
 
-        # Change the workflow state of the Expense Report to Submitted
-        doc = frappe.get_doc('Expense Report', report)
-        doc.workflow_state = 'Journals Created'
-        doc.save()
-        frappe.db.commit()
+        _update_expense_report(report, jv.name)
+
+        return {"success": True, "journal_entry": jv.name}
 
     except Exception as e:
-        # Log the error to the Frappe error log document
-        frappe.log_error(f"An error occurred: {str(e)}")
+        if jv and jv.name and frappe.db.exists("Journal Entry", jv.name):
+            try:
+                frappe.delete_doc("Journal Entry", jv.name, force=True)
+            except:
+                pass
+
+        frappe.log_error(
+            f"Ocurrió un error al crear los asientos contables: {str(e)}",
+            "Expense Report - Create Journal Entry Error"
+        )
+        frappe.throw(f"Error al crear el Asiento Contable: {str(e)}")
+
+
+def _get_expense_report_data(report: str) -> Dict[str, Any]:
+    """Obtiene los datos básicos del Expense Report"""
+    fields = ['company', 'paying_account']
+    return frappe.db.get_all(
+        'Expense Report',
+        filters={'name': report},
+        fields=fields
+    )[0]
+
+
+
+
+
+def _calculate_expense_total(report: str) -> float:
+    """Calcula el total de gastos del reporte"""
+    expenses = frappe.db.get_all(
+        'Expense Detail',
+        filters={'parent': report},
+        fields=['expense_id', 'subtotal', 'description']
+    )
+
+    return sum(item.subtotal for item in expenses)
+
+
+def _get_expense_accounts(report: str) -> List[Dict[str, Any]]:
+    """Obtiene las cuentas de gasto por categoría"""
+    sql = f"""
+        SELECT
+            ec.expense_account,
+            ed.subtotal
+        FROM
+            `tabExpense Category` ec
+        JOIN
+            `tabExpense` e
+        ON
+            ec.name = e.category
+        JOIN
+            `tabExpense Detail` ed
+        ON
+            e.name = ed.expense_id
+        WHERE
+            ed.parent = '{report}';
+    """
+    return frappe.db.sql(sql, as_dict=True)
+
+
+def _create_journal_entry_doc(expense_report: Dict[str, Any], report_name: str,
+                               expense_total: float) -> Document:
+    """Crea el documento Journal Entry con datos básicos"""
+    jv = frappe.new_doc('Journal Entry')
+    jv.voucher_type = 'Journal Entry'
+    jv.naming_series = 'ACC-JV-.YYYY.-'
+    jv.posting_date = nowdate()
+    jv.company = expense_report.company
+    jv.remark = f"Expense Report: {report_name}"
+
+    # Entrada al lado del Crédito (cuenta pagadora)
+    jv.append('accounts', {
+        'account': expense_report.paying_account,
+        'credit': float(expense_total),
+        'debit': float(0),
+        'debit_in_account_currency': float(0),
+        'credit_in_account_currency': float(expense_total),
+    })
+
+    return jv
+
+
+def _add_expense_account_entries(jv: Document, expense_accounts: List[Dict[str, Any]]) -> None:
+    """Agrega las entradas de débito para cada cuenta de gasto"""
+    for acc in expense_accounts:
+        if not acc.expense_account:
+            frappe.throw(
+                f"Una de las categorías de gasto no tiene una cuenta asignada. "
+                f"Por favor configure las cuentas en las Categorías de Gasto."
+            )
+
+        jv.append('accounts', {
+            'account': acc.expense_account,
+            'debit': float(acc.subtotal),
+            'credit': float(0),
+            'credit_in_account_currency': float(0),
+            'debit_in_account_currency': float(acc.subtotal)
+        })
+
+
+
+
+
+def _update_expense_report(report_name: str, journal_entry_name: str) -> None:
+    """Actualiza el Expense Report con la referencia al Journal Entry"""
+    doc = frappe.get_doc('Expense Report', report_name)
+    doc.journal_entry = journal_entry_name
+    doc.workflow_state = 'Journals Created'
+    doc.save()

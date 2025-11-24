@@ -67,7 +67,8 @@
    "in_standard_filter": 1,
    "label": "Category",
    "options": "Expense Category",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "allow_in_quick_entry": 1,
@@ -98,12 +99,14 @@
   },
   {
    "allow_in_quick_entry": 1,
+   "default": "Company",
    "fieldname": "paid_by",
    "fieldtype": "Select",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Paid By",
-   "options": "Employee (to reimburse)\nCompany",
+   "options": "Company",
+   "read_only": 1,
    "reqd": 1
   },
   {
@@ -121,7 +124,8 @@
    "in_standard_filter": 1,
    "label": "Company",
    "options": "Company",
-   "reqd": 1
+   "reqd": 1,
+   "search_index": 1
   },
   {
    "fieldname": "notes",
@@ -142,14 +146,15 @@
   {
    "fieldname": "split_total",
    "fieldtype": "Currency",
-   "label": "Split Total",
+   "label": "Total",
+   "non_negative": 1,
    "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-04-01 13:14:20.227282",
+ "modified": "2025-11-23 13:28:08.930008",
  "modified_by": "Administrator",
  "module": "Erpnext Expenses",
  "name": "Expense",
@@ -171,6 +176,7 @@
   }
  ],
  "quick_entry": 1,
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

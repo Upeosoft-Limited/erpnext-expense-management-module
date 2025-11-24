@@ -68,7 +68,10 @@ app_license = "mit"
 # ------------
 
 # before_install = "erpnext_expenses.install.before_install"
-# after_install = "erpnext_expenses.install.after_install"
+after_install = [
+    "erpnext_expenses.setup.set_data"
+]
+
 
 # Uninstallation
 # ------------
@@ -123,10 +126,8 @@ app_license = "mit"
 # Hook on document methods and events
 
 # doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
+# 	"Journal Entry": {
+# 		"before_cancel": "erpnext_expenses.overrides.journal_entry.validate_expense_report_link"
 # 	}
 # }
 
