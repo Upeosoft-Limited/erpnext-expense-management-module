@@ -6,9 +6,13 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "code",
+  "column_break_vofa",
   "category_name",
+  "section_break_ekej",
+  "expense_account",
   "column_break_bygm",
-  "expense_account"
+  "item"
  ],
  "fields": [
   {
@@ -33,11 +37,30 @@
    "label": "Expense Account",
    "options": "Account",
    "reqd": 1
+  },
+  {
+   "fieldname": "code",
+   "fieldtype": "Data",
+   "label": "Code"
+  },
+  {
+   "fieldname": "section_break_ekej",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_vofa",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "item",
+   "fieldtype": "Link",
+   "label": "Item",
+   "options": "Item"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-03-29 14:29:05.886049",
+ "modified": "2025-11-26 22:17:53.864157",
  "modified_by": "Administrator",
  "module": "Erpnext Expenses",
  "name": "Expense Category",
@@ -58,6 +81,7 @@
   }
  ],
  "quick_entry": 1,
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

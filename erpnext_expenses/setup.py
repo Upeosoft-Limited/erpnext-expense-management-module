@@ -12,6 +12,7 @@ def set_data():
     """
     print("Iniciando configuración de datos para erpnext_expenses...")
     create_expense_categories()
+    create_items_from_csv()
     create_expense_manager_role()
     print("Configuración de datos completada.")
 
@@ -24,7 +25,7 @@ def create_expense_categories():
     print("Creando categorías de gastos...")
 
     # Ruta al archivo CSV
-    csv_file_path = frappe.get_app_path('erpnext_expenses', 'erpnext_expenses', 'resources', 'setup', 'expense_category.csv')
+    csv_file_path = frappe.get_app_path('erpnext_expenses', 'resources', 'setup', 'expense_category.csv')
 
     if not os.path.exists(csv_file_path):
         print(f"Error: No se encontró el archivo CSV en {csv_file_path}")
@@ -50,31 +51,35 @@ def create_expense_categories():
                 print(f"Procesando compañía: {company}")
 
                 for row in csv_rows:
-                    description = row.get('Descripción', '').strip()
+                    description = row.get('Nombre', '').strip()
                     code = row.get('Codigo', '').strip()
+                    account_number = row.get('Cuenta', '').strip()
 
                     if not description:
                         continue
 
-                    # 1. Buscar cuenta con nombre EXACTO
-                    account_name = frappe.db.get_value("Account", {
-                        "account_name": description,
-                        "company": company,
-                        "is_group": 0
-                    }, "name")
+                    account_name = None
 
-                    # 2. Si no existe, buscar "OTROS GASTOS"
+                    # 1. Buscar cuenta por NÚMERO (Prioridad)
+                    if account_number:
+                        account_name = frappe.db.get_value("Account", {
+                            "account_number": account_number,
+                            "company": company,
+                            "is_group": 0
+                        }, "name")
+
+                    # 2. Si no se encuentra por número, intentar por nombre exacto (Fallback)
                     if not account_name:
                         account_name = frappe.db.get_value("Account", {
-                            "account_name": "OTROS GASTOS",
+                            "account_name": description,
                             "company": company,
                             "is_group": 0
                         }, "name")
 
                     # 3. Si no se consigue cuenta
                     if not account_name:
-                        msg = f"No se encontró cuenta para la categoría '{description}' en la compañía '{company}'"
-                        print(msg)
+                        msg = f"No se encontró cuenta '{account_number}' ni '{description}' para la compañía '{company}'"
+                        print(f"  !! {msg}")
                         categories_without_account.append(msg)
                         continue
 
@@ -84,7 +89,7 @@ def create_expense_categories():
 
                     # Fallback check if code is empty (shouldn't be based on CSV)
                     if not exists:
-                         exists = frappe.db.exists("Expense Category", {
+                        exists = frappe.db.exists("Expense Category", {
                             "category_name": description,
                             "expense_account": account_name
                         })
@@ -148,3 +153,102 @@ def create_expense_manager_role():
             print(f"  -- Administrator ya tiene el rol '{role_name}'.")
     except Exception as e:
         print(f"  !! Error asignando rol a Administrator: {e}")
+
+
+def create_items_from_csv():
+    print("Creando Items desde CSV...")
+    csv_file_path = frappe.get_app_path('erpnext_expenses', 'resources', 'setup', 'expense_category.csv')
+
+    if not os.path.exists(csv_file_path):
+        print(f"Error: No se encontró el archivo CSV en {csv_file_path}")
+        return
+
+    # Default UOM
+    default_uom = "Unit"
+    if not frappe.db.exists("UOM", "Unit"):
+        if frappe.db.exists("UOM", "Nos"):
+            default_uom = "Nos"
+        elif frappe.db.exists("UOM", "Unidad"):
+            default_uom = "Unidad"
+        else:
+            uoms = frappe.get_all("UOM", limit=1)
+            if uoms:
+                default_uom = uoms[0].name
+
+    # Default Item Group
+    default_item_group = "All Item Groups"
+    if not frappe.db.exists("Item Group", default_item_group):
+        igs = frappe.get_all("Item Group", limit=1)
+        if igs:
+            default_item_group = igs[0].name
+
+    try:
+        with open(csv_file_path, 'r', encoding='utf-8-sig') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                description = row.get('Nombre', '').strip()
+                account_number = row.get('Cuenta', '').strip()
+
+                if not description or not account_number:
+                    continue
+
+                # Inferencia de Stock
+                is_stock = 0
+
+                # 5.x.x.x -> Costos (Stock)
+                if account_number.startswith('5'):
+                    if any(keyword in description.upper() for keyword in ['FLETES', 'GASTOS', 'SERVICIO', 'HONORARIOS']):
+                        is_stock = 0
+                    else:
+                        is_stock = 1
+
+                # 6.x.x.x -> Gastos (Servicios)
+                elif account_number.startswith('6'):
+                    is_stock = 0
+
+                # 1.3.x.x -> Activos Fijos (No Stock)
+                elif account_number.startswith('1.3'):
+                    is_stock = 0
+
+                else:
+                    continue
+
+                # Verificar si existe Item
+                item_name = description
+                if not frappe.db.exists("Item", item_name):
+                    try:
+                        item = frappe.new_doc("Item")
+                        item.item_code = item_name
+                        item.item_name = item_name
+                        item.description = description
+                        item.item_group = default_item_group
+                        item.stock_uom = default_uom
+                        item.is_stock_item = is_stock
+                        item.is_purchase_item = 1
+
+                        item.insert(ignore_permissions=True)
+                        print(f"  -> Item creado: {item_name} (Stock: {is_stock})")
+                    except Exception as e:
+                        print(f"  !! Error creando item {item_name}: {e}")
+                        continue
+                else:
+                    print(f"  -- Item ya existe: {item_name}")
+
+                # Asignar Item a Expense Category
+                # Buscamos la categoría por nombre (que es lo que usamos al crearla)
+                # Nota: Expense Category tiene naming rule format:{category_name}-{expense_account}
+                # Pero podemos buscar por el campo category_name
+                expense_categories = frappe.get_all("Expense Category", filters={"category_name": description})
+
+                for cat in expense_categories:
+                    try:
+                        frappe.db.set_value("Expense Category", cat.name, "item", item_name)
+                        print(f"  -> Asignado Item '{item_name}' a Categoría '{cat.name}'")
+                    except Exception as e:
+                        print(f"  !! Error asignando item a categoría {cat.name}: {e}")
+
+    except Exception as e:
+        print(f"Error procesando items: {e}")
+        frappe.log_error(frappe.get_traceback(), 'Error en create_items_from_csv')
+
+    print("Creación de Items completada.")
