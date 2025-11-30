@@ -17,15 +17,12 @@ frappe.ui.form.on("Expense Report", {
     };
 
     if (is_account_user) {
-      if (state === "Approved") set_field_state(true, 0);
-      else if (state === "Journals Created") set_field_state(true, 1);
-      else set_field_state(false);
-      if (state === "Journals Created") {
-        set_field_state(true, 1); // Solo lectura si ya se crearon
-      } else if (state === "Approved") {
-        set_field_state(true, 0); // Editable si está aprobado
+      if (state === "Approved") {
+        set_field_state(true, 0); 
+      } else if (state === "Journals Created") {
+        set_field_state(true, 1);
       } else {
-        set_field_state(false); // Oculto en otros estados como Borrador
+        set_field_state(false); 
       }
     } else {
       set_field_state(true, 1);
@@ -69,7 +66,7 @@ frappe.ui.form.on("Expense Report", {
             ),
             indicator: "orange",
           });
-          return; // No hace nada más si los campos están vacíos
+          return; 
         }
           frappe.dom.freeze("Generando Asientos Contables...");
           frappe.call({
@@ -96,6 +93,19 @@ frappe.ui.form.on("Expense Report", {
 
   after_workflow_action: function (frm) {
     if (frm.doc.workflow_state == "Journals Created") {
+      if (!frm.doc.paying_account || !frm.doc.mode_of_payment) {
+        frappe.msgprint({
+          title: __("Campos Requeridos"),
+          message: __(
+            "Por favor, seleccione un <b>Modo de Pago</b> y una <b>Cuenta de Pago</b>."
+          ),
+          indicator: "red",
+        });
+        frm.doc.workflow_state = "Approved";
+        frm.save();
+        return;
+      }
+
       frappe.dom.freeze("Generando Asientos Contables...");
       frappe.call({
         method:

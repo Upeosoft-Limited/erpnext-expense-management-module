@@ -51,7 +51,6 @@ frappe.ui.form.on("Expense", {
       });
     }
 
-    // Si no hay categoría, no se muestra ningún artículo.
     update_item_filter(frm);
   },
 
@@ -61,6 +60,28 @@ frappe.ui.form.on("Expense", {
         frm.refresh_field('table_jkwj');
     }
     update_item_filter(frm);
+  },
+
+  validate: function (frm) {
+    total_expense_amount = frm.doc.total;
+    calculateTotalAmount(frm, total_expense_amount);
+  },
+
+  table_jkwj_add: function (frm) {
+    var total = 0;
+    frm.doc.amount.forEach(function (row) {
+      total += row.amount || 0;
+
+      console.log(total);
+    });
+  },
+
+  expense_date: function (frm) {
+    if (frm.doc.expense_date > frappe.datetime.nowdate()) {
+      frappe.msgprint("La fecha del gasto no puede ser en el futuro.");
+      frappe.validated = false;
+      frm.set_value("expense_date", "");
+    }
   },
 });
 
@@ -88,31 +109,6 @@ function update_item_filter(frm) {
         });
     }
 }
-
-frappe.ui.form.on("Expense", {
-
-  validate: function (frm) {
-    total_expense_amount = frm.doc.total;
-    calculateTotalAmount(frm, total_expense_amount);
-  },
-
-  table_jkwj_add: function (frm) {
-    var total = 0;
-    frm.doc.amount.forEach(function (row) {
-      total += row.amount || 0;
-
-      console.log(total);
-    });
-  },
-
-  expense_date: function (frm) {
-    if (frm.doc.expense_date > frappe.datetime.nowdate()) {
-      frappe.msgprint("La fecha del gasto no puede ser en el futuro.");
-      frappe.validated = false;
-      frm.set_value("expense_date", "");
-    }
-  },
-});
 
 // get the total in real time as it is added to the splitting child table
 
