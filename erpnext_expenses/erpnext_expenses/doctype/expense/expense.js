@@ -12,7 +12,7 @@ frappe.ui.form.on("Expense", {
       frm.toggle_display("paying_account", false);
     }
 
-    toggle_total_field_visibility(frm);
+    recalculateAmountsForCompanyCurrency(frm);
 
     if (frm.doc.workflow_state == "Submitted") {
       frm.add_custom_button("Crear Reporte", function () {
@@ -86,11 +86,10 @@ frappe.ui.form.on("Expense", {
     }
   },
 
-  spending_currency: function (frm) {
+  spending_currency: async function (frm) {
     const old_rate = frm.doc.exchange_rate;
     const old_total_exchange = frm.doc.total_exchange;
-
-    toggle_total_field_visibility(frm, old_rate, old_total_exchange);
+    await recalculateAmountsForCompanyCurrency(frm, old_rate, old_total_exchange);
     frm.refresh_field("table_jkwj");
   },
 
@@ -107,25 +106,40 @@ frappe.ui.form.on("Expense", {
   }
 });
 
-async function toggle_total_field_visibility(frm, old_rate = null, old_total_exchange = null) {
+async function recalculateAmountsForCompanyCurrency(frm, old_rate = null, old_total_exchange = null) {
   if (!frm.doc.spending_currency || !frm.doc.company) {
     frm.set_df_property('total', 'label', 'Total');
+    frm.get_field('table_jkwj').grid.update_docfield_property('amount', 'label', 'Importe');
     return;
   }
 
-const { message: { default_currency: company_currency } } = await frappe.db.get_value("Company", frm.doc.company, "default_currency");
+  const company_data = await frappe.db.get_value("Company", frm.doc.company, "default_currency");
+  const company_currency = company_data?.message?.default_currency;
 
-frm.set_df_property('total', 'label', `Total (${company_currency})`);
+  if (!company_currency) {
+    frappe.msgprint({
+        title: __('Moneda no Encontrada'),
+        indicator: 'red',
+        message: __("No se pudo encontrar la moneda por defecto para la compañía seleccionada.")
+    });
+    return;
+  }
+
+  frm.set_df_property('total', 'label', `Total (${company_currency})`);
+
+  const spending_currency = frm.doc.spending_currency;
+  frm.get_field('table_jkwj').grid.update_docfield_property('amount', 'label', `Importe (${spending_currency})`);
   
   if (frm.doc.spending_currency === company_currency) {
     frm.set_value("exchange_rate", 1);
     frm.toggle_display("total", false);
 
     if (old_rate && old_rate != 1 && old_total_exchange > 0) {
-      frm.set_value("total_exchange", old_total_exchange * old_rate);
+      frm.set_value("total_exchange", flt(old_total_exchange * old_rate, precision("total_exchange")));
       (frm.doc.table_jkwj || []).forEach(row => {
         if (row.amount_exchange > 0 && old_rate != 1) {
-          frappe.model.set_value(row.doctype, row.name, "amount_exchange", row.amount_exchange * old_rate);
+          let new_amount_exchange = flt(row.amount_exchange * old_rate, precision("amount_exchange", row));
+          frappe.model.set_value(row.doctype, row.name, "amount_exchange", new_amount_exchange);
         }
       });
     }
@@ -148,12 +162,13 @@ frm.set_df_property('total', 'label', `Total (${company_currency})`);
       frm.set_value("exchange_rate", new_rate);
 
       if (old_rate == 1 && old_total_exchange > 0 && new_rate > 0) {
-        frm.set_value("total_exchange", old_total_exchange / new_rate);
+        frm.set_value("total_exchange", flt(old_total_exchange / new_rate, precision("total_exchange")));
       }
 
       (frm.doc.table_jkwj || []).forEach(row => {
         if (row.amount > 0 && new_rate > 0) {
-          frappe.model.set_value(row.doctype, row.name, "amount_exchange", row.amount / new_rate);
+          let new_amount_exchange = flt(row.amount / new_rate, precision("amount_exchange", row));
+          frappe.model.set_value(row.doctype, row.name, "amount_exchange", new_amount_exchange);
         }
       });
     } else {
@@ -199,7 +214,8 @@ frappe.ui.form.on(
     function (frm, cdt, cdn) {
         let row = locals[cdt][cdn];
         if (frm.doc.exchange_rate > 0) {
-            frappe.model.set_value(cdt, cdn, "amount_exchange", row.amount / frm.doc.exchange_rate);
+            let new_amount_exchange = flt(row.amount / frm.doc.exchange_rate, precision("amount_exchange", row));
+            frappe.model.set_value(cdt, cdn, "amount_exchange", new_amount_exchange);
         }
         calculate_split_totals(frm);
   }
@@ -210,7 +226,8 @@ frappe.ui.form.on(
   "amount_exchange",
     function (frm, cdt, cdn) {
         let row = locals[cdt][cdn];
-        frappe.model.set_value(cdt, cdn, "amount", row.amount_exchange * frm.doc.exchange_rate);
+        let new_amount = flt(row.amount_exchange * frm.doc.exchange_rate, precision("amount", row));
+        frappe.model.set_value(cdt, cdn, "amount", new_amount);
         calculate_split_totals(frm);
   }
 );
@@ -218,8 +235,10 @@ frappe.ui.form.on(
 function calculate_split_totals(frm) {
     let split_total = 0;
     let split_exchange = 0;
-    (frm.doc.table_jkwj || []).forEach(d => split_total += d.amount);
-    (frm.doc.table_jkwj || []).forEach(d => split_exchange += d.amount_exchange);
+    (frm.doc.table_jkwj || []).forEach(d => {
+        split_total += d.amount || 0;
+        split_exchange += d.amount_exchange || 0;
+    });
     frm.set_value({ 'split_total': split_total, 'split_exchange': split_exchange });
 }
 
@@ -250,8 +269,8 @@ function calculateTotalAmount(frm, total_expense_amount) {
 }
 
 function calculate_total_in_company_currency(frm) {
-  if (frm.doc.total_exchange && frm.doc.exchange_rate) {
-    let total = frm.doc.total_exchange * frm.doc.exchange_rate;
+  if (frm.doc.total_exchange != null && frm.doc.exchange_rate != null) {
+    let total = flt(frm.doc.total_exchange * frm.doc.exchange_rate, precision("total"));
     frm.set_value('total', total);
   }
 }
