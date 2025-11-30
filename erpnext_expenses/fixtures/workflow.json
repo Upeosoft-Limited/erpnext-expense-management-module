@@ -177,7 +177,7 @@
                 "action": "Create Journal Entries",
                 "allow_self_approval": 0,
                 "allowed": "Accounts User",
-                "condition": "",
+                "condition": "doc.paying_account and doc.mode_of_payment",
                 "next_state": "Journals Created",
                 "parent": "Expense Report",
                 "parentfield": "transitions",
@@ -229,6 +229,21 @@
                 "update_field": null,
                 "update_value": null,
                 "workflow_builder_id": null
+            },
+            {
+                "allow_edit": "Administrator",
+                "avoid_status_override": 0,
+                "doc_status": "2",
+                "is_optional_state": 0,
+                "message": null,
+                "next_action_email_template": null,
+                "parent": "Expense",
+                "parentfield": "states",
+                "parenttype": "Workflow",
+                "state": "Cancelled",
+                "update_field": null,
+                "update_value": null,
+                "workflow_builder_id": null
             }
         ],
         "transitions": [
@@ -242,6 +257,18 @@
                 "parentfield": "transitions",
                 "parenttype": "Workflow",
                 "state": "Draft",
+                "workflow_builder_id": null
+            },
+            {
+                "action": "Cancel",
+                "allow_self_approval": 1,
+                "allowed": "System Manager",
+                "condition": null,
+                "next_state": "Cancelled",
+                "parent": "Expense",
+                "parentfield": "transitions",
+                "parenttype": "Workflow",
+                "state": "Submitted",
                 "workflow_builder_id": null
             }
         ],

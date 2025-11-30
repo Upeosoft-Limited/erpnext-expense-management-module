@@ -7,6 +7,31 @@ from frappe.utils import nowdate
 
 
 class ExpenseReport(Document):
+    def validate(self):
+        """
+        Valida que los gastos en el reporte no estén ya incluidos en otro
+        reporte de gastos activo.
+        """
+        for detail in self.get("expense"):
+            if not detail.expense_id:
+                continue
+
+           
+            existing_report = frappe.db.get_value(
+                "Expense Detail",
+                filters={
+                    "expense_id": detail.expense_id,
+                    "parent": ["!=", self.name],
+                    "docstatus": ["!=", 2],  
+                },
+                fieldname="parent"
+            )
+
+            if existing_report:
+                frappe.throw(f"El gasto <b>{detail.expense_id}</b> "
+                             f"ya está incluido en el Reporte de Gastos <b>{existing_report}</b>.")
+
+
     def on_cancel(self) -> None:
         """Cancela el Asiento Contable asociado cuando se cancela el Reporte de Gastos"""
         # Si existe un Journal Entry vinculado, cancelarlo
@@ -171,3 +196,24 @@ def _update_expense_report(report_name: str, journal_entry_name: str) -> None:
     doc.journal_entry = journal_entry_name
     doc.workflow_state = 'Journals Created'
     doc.save()
+
+
+@frappe.whitelist()
+def get_account_from_mode_of_payment(mode_of_payment: str, company: str) -> Optional[str]:
+    """
+    Obtiene la cuenta por defecto de un Modo de Pago para una compañía específica.
+    Esta función se ejecuta con permisos de administrador para leer el DocType hijo.
+    """
+    if not mode_of_payment or not company:
+        return None
+
+    account = frappe.db.get_value(
+        "Mode of Payment Account",
+        filters={
+            "parent": mode_of_payment,
+            "company": company,
+        },
+        fieldname="default_account",
+        ignore=True  
+    )
+    return account
