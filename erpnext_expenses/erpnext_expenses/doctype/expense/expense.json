@@ -9,6 +9,7 @@
   "section_break_8yiu",
   "expense_description",
   "category",
+  "total_exchange",
   "total",
   "paid_by",
   "column_break_jsim",
@@ -19,6 +20,9 @@
   "company",
   "notes",
   "amended_from",
+  "section_break_dbzj",
+  "spending_currency",
+  "exchange_rate",
   "expense_splitting_section",
   "split_total",
   "table_jkwj"
@@ -71,14 +75,15 @@
    "search_index": 1
   },
   {
-   "allow_in_quick_entry": 1,
    "fieldname": "total",
    "fieldtype": "Currency",
+   "hidden": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Total",
    "non_negative": 1,
-   "reqd": 1
+   "precision": "2",
+   "read_only": 1
   },
   {
    "allow_in_quick_entry": 1,
@@ -148,13 +153,42 @@
    "fieldtype": "Currency",
    "label": "Total",
    "non_negative": 1,
+   "precision": "2",
    "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_dbzj",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "spending_currency",
+   "fieldtype": "Link",
+   "label": "Spending Currency",
+   "options": "Currency"
+  },
+  {
+   "default": "1",
+   "fieldname": "exchange_rate",
+   "fieldtype": "Currency",
+   "label": "Exchange Rate",
+   "precision": "9",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_exchange",
+   "fieldtype": "Currency",
+   "label": "Total",
+   "non_negative": 1,
+   "options": "spending_currency",
+   "precision": "2",
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-11-29 14:14:49.149680",
+ "modified": "2025-11-30 15:40:43.398237",
  "modified_by": "Administrator",
  "module": "Erpnext Expenses",
  "name": "Expense",

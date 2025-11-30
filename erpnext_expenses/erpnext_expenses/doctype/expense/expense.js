@@ -1,5 +1,5 @@
 // Copyright (c) 2024, Karani Geoffrey and contributors
-// For license information, please see license.txt
+// For license information, please see license.txt 
 
 frappe.ui.form.on("Expense", {
   refresh: function (frm) {
@@ -11,6 +11,8 @@ frappe.ui.form.on("Expense", {
       // Hide the paying_account field
       frm.toggle_display("paying_account", false);
     }
+
+    toggle_total_field_visibility(frm);
 
     if (frm.doc.workflow_state == "Submitted") {
       frm.add_custom_button("Crear Reporte", function () {
@@ -83,7 +85,86 @@ frappe.ui.form.on("Expense", {
       frm.set_value("expense_date", "");
     }
   },
+
+  spending_currency: function (frm) {
+    const old_rate = frm.doc.exchange_rate;
+    const old_total_exchange = frm.doc.total_exchange;
+
+    toggle_total_field_visibility(frm, old_rate, old_total_exchange);
+    frm.refresh_field("table_jkwj");
+  },
+
+  company: function(frm) {
+    frm.trigger("spending_currency");
+  },
+
+  total_exchange: function(frm) {
+    calculate_total_in_company_currency(frm);
+  },
+
+  exchange_rate: function(frm) {
+    calculate_total_in_company_currency(frm);
+  }
 });
+
+async function toggle_total_field_visibility(frm, old_rate = null, old_total_exchange = null) {
+  if (!frm.doc.spending_currency || !frm.doc.company) {
+    frm.set_df_property('total', 'label', 'Total');
+    return;
+  }
+
+const { message: { default_currency: company_currency } } = await frappe.db.get_value("Company", frm.doc.company, "default_currency");
+
+frm.set_df_property('total', 'label', `Total (${company_currency})`);
+  
+  if (frm.doc.spending_currency === company_currency) {
+    frm.set_value("exchange_rate", 1);
+    frm.toggle_display("total", false);
+
+    if (old_rate && old_rate != 1 && old_total_exchange > 0) {
+      frm.set_value("total_exchange", old_total_exchange * old_rate);
+      (frm.doc.table_jkwj || []).forEach(row => {
+        if (row.amount_exchange > 0 && old_rate != 1) {
+          frappe.model.set_value(row.doctype, row.name, "amount_exchange", row.amount_exchange * old_rate);
+        }
+      });
+    }
+  } else {
+    frm.toggle_display("total", true);
+    const r = await frappe.call({
+      method: "frappe.client.get_value",
+      args: {
+        doctype: "Currency Exchange",
+        filters: {
+          from_currency: frm.doc.spending_currency,
+          to_currency: company_currency
+        },
+        fieldname: ["exchange_rate"]
+      }
+    });
+
+    if (r.message && r.message.exchange_rate) {
+      const new_rate = r.message.exchange_rate;
+      frm.set_value("exchange_rate", new_rate);
+
+      if (old_rate == 1 && old_total_exchange > 0 && new_rate > 0) {
+        frm.set_value("total_exchange", old_total_exchange / new_rate);
+      }
+
+      (frm.doc.table_jkwj || []).forEach(row => {
+        if (row.amount > 0 && new_rate > 0) {
+          frappe.model.set_value(row.doctype, row.name, "amount_exchange", row.amount / new_rate);
+        }
+      });
+    } else {
+      frappe.msgprint({
+        title: __('Tasa de Cambio no Encontrada'),
+        indicator: 'orange',
+        message: __('No se encontró una tasa de cambio para la moneda y fecha seleccionadas. Por favor, ingrésela manualmente.')
+      });
+    }
+  }
+}
 
 function update_item_filter(frm) {
     let category = frm.doc.category;
@@ -115,16 +196,32 @@ function update_item_filter(frm) {
 frappe.ui.form.on(
   "Expense Splitting Detail",
   "amount",
-  function (frm, cdt, cdn) {
-    let split_total = 0;
-
-    frm.doc.table_jkwj.forEach(function (item) {
-      split_total += item.amount;
-    });
-
-    frm.set_value("split_total", split_total);
+    function (frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+        if (frm.doc.exchange_rate > 0) {
+            frappe.model.set_value(cdt, cdn, "amount_exchange", row.amount / frm.doc.exchange_rate);
+        }
+        calculate_split_totals(frm);
   }
 );
+
+frappe.ui.form.on(
+  "Expense Splitting Detail",
+  "amount_exchange",
+    function (frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+        frappe.model.set_value(cdt, cdn, "amount", row.amount_exchange * frm.doc.exchange_rate);
+        calculate_split_totals(frm);
+  }
+);
+
+function calculate_split_totals(frm) {
+    let split_total = 0;
+    let split_exchange = 0;
+    (frm.doc.table_jkwj || []).forEach(d => split_total += d.amount);
+    (frm.doc.table_jkwj || []).forEach(d => split_exchange += d.amount_exchange);
+    frm.set_value({ 'split_total': split_total, 'split_exchange': split_exchange });
+}
 
 // Function to calculate total amount in the child table
 function calculateTotalAmount(frm, total_expense_amount) {
@@ -149,5 +246,12 @@ function calculateTotalAmount(frm, total_expense_amount) {
     }
   } else {
     return true;
+  }
+}
+
+function calculate_total_in_company_currency(frm) {
+  if (frm.doc.total_exchange && frm.doc.exchange_rate) {
+    let total = frm.doc.total_exchange * frm.doc.exchange_rate;
+    frm.set_value('total', total);
   }
 }

@@ -7,7 +7,8 @@
  "engine": "InnoDB",
  "field_order": [
   "item",
-  "amount"
+  "amount",
+  "amount_exchange"
  ],
  "fields": [
   {
@@ -23,17 +24,27 @@
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
+   "label": "Amount (VEF)",
+   "non_negative": 1,
+   "precision": "2",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "amount_exchange",
+   "fieldtype": "Currency",
    "in_list_view": 1,
-   "in_standard_filter": 1,
    "label": "Amount",
    "non_negative": 1,
+   "options": "spending_currency",
+   "precision": "2",
    "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-11-23 15:50:25.811852",
+ "modified": "2025-11-30 15:42:28.932146",
  "modified_by": "Administrator",
  "module": "Erpnext Expenses",
  "name": "Expense Splitting Detail",
