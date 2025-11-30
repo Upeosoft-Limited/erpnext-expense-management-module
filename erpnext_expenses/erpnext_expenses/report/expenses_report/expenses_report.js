@@ -25,11 +25,5 @@ frappe.query_reports["Expenses Report"] = {
 			"mandatory": 0,
 			"wildcard_filter": 0
 		},
-		{
-			"fieldname": "currency",
-			"label": __("Moneda"),
-			"fieldtype": "Link",
-			"options": "Currency"
-		}
 	]	
 };

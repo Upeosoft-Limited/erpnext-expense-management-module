@@ -12259,7 +12259,7 @@
  },
  {
   "charts": [],
-  "content": "[{\"id\":\"1KG5Mc2zmz\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Expenses</span>\",\"col\":12}},{\"id\":\"Yy2SH5NS5k\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expense\",\"col\":3}},{\"id\":\"WcDNIeA9xC\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expense Report\",\"col\":3}},{\"id\":\"woSHdbpbaC\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expense Category\",\"col\":3}},{\"id\":\"wb3g8Pncbe\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expense Taxes\",\"col\":3}}]",
+  "content": "[{\"id\":\"1KG5Mc2zmz\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Expenses</span>\",\"col\":12}},{\"id\":\"Yy2SH5NS5k\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expense\",\"col\":3}},{\"id\":\"WcDNIeA9xC\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expense Report\",\"col\":3}},{\"id\":\"woSHdbpbaC\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expense Category\",\"col\":3}},{\"id\":\"gL7pQjR9bF\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expenses Report\",\"col\":3}}]",
   "custom_blocks": [],
   "docstatus": 0,
   "doctype": "Workspace",
@@ -12334,15 +12334,14 @@
     "doc_view": "List",
     "format": null,
     "icon": null,
-    "kanban_board": null,
-    "label": "Expense Taxes",
-    "link_to": "Expense Taxes",
+    "is_query_report": 1,
+    "label": "Expenses Report",
+    "link_to": "Expenses Report",
     "parent": "Expenses",
     "parentfield": "shortcuts",
     "parenttype": "Workspace",
-    "restrict_to_domain": null,
     "stats_filter": "[]",
-    "type": "DocType",
+    "type": "Report",
     "url": null
    }
   ],

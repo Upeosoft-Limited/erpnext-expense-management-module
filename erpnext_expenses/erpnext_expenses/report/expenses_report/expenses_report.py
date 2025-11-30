@@ -12,7 +12,7 @@ def execute(filters=None):
 	if not data:
 		return columns, [], None, None, []
 
-	totals = get_total_row(data)
+	totals = calculate_totals(data)
 	report_summary = get_report_summary(totals)
 	return columns, data, None, None, report_summary
 
@@ -51,10 +51,9 @@ def get_expense_data(filters):
 			ed.description,
 			ed.subtotal as amount
 		FROM
-			`tabExpense Report` er, `tabExpense Detail` ed
+		`tabExpense Report` er JOIN `tabExpense Detail` ed ON er.name = ed.parent
 		WHERE
-			er.name = ed.parent
-			AND er.docstatus = 1
+			er.docstatus = 1
 			{conditions}
 		ORDER BY
 			ed.expense_date
@@ -75,9 +74,9 @@ def get_conditions(filters):
 	
 	return conditions
 
-def get_total_row(data: list[dict]) -> dict:
+def calculate_totals(data: list[dict]) -> dict:
 	"""
-	Calcula la fila de totales para el reporte.
+	Calcula los totales para el resumen del reporte.
 	"""
 	if not data:
 		return {}
@@ -85,7 +84,6 @@ def get_total_row(data: list[dict]) -> dict:
 	total_amount = sum(row.get("amount", 0) for row in data)
 
 	return {
-		"expense_report": _("TOTALES"),
 		"amount": total_amount,
 	}
 
