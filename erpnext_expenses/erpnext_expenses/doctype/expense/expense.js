@@ -137,7 +137,7 @@ async function recalculateAmountsForCompanyCurrency(frm, old_rate = null, old_to
     if (old_rate && old_rate != 1 && old_total_exchange > 0) {
       frm.set_value("total_exchange", flt(old_total_exchange * old_rate, precision("total_exchange")));
       (frm.doc.table_jkwj || []).forEach(row => {
-        if (row.amount_exchange > 0 && old_rate != 1) {
+        if (row.amount_exchange > 0) {
           let new_amount_exchange = flt(row.amount_exchange * old_rate, precision("amount_exchange", row));
           frappe.model.set_value(row.doctype, row.name, "amount_exchange", new_amount_exchange);
         }
