@@ -12,10 +12,7 @@ frappe.ui.form.on("Expense", {
       frm.toggle_display("paying_account", false);
     }
 
-    if (
-      frm.doc.workflow_state == "Draft" ||
-      frm.doc.workflow_state == "Submitted"
-    ) {
+    if (frm.doc.workflow_state == "Submitted") {
       frm.add_custom_button("Crear Reporte", function () {
         frappe.call({
           method:
@@ -53,6 +50,16 @@ frappe.ui.form.on("Expense", {
         },
       });
     }
+
+    update_item_filter(frm);
+  },
+
+  category: function(frm) {
+    if (frm.doc.table_jkwj && frm.doc.table_jkwj.length > 0) {
+        frm.clear_table('table_jkwj');
+        frm.refresh_field('table_jkwj');
+    }
+    update_item_filter(frm);
   },
 
   validate: function (frm) {
@@ -77,6 +84,31 @@ frappe.ui.form.on("Expense", {
     }
   },
 });
+
+function update_item_filter(frm) {
+    let category = frm.doc.category;
+    if (category) {
+        frappe.db.get_value("Expense Category", category, "item")
+            .then(r => {
+                let item_code = r.message.item;
+                frm.set_query("item", "table_jkwj", function() {
+                    return {
+                        filters: {
+                            "name": item_code || "non-existent-item" 
+                        }
+                    };
+                });
+            });
+    } else {
+        frm.set_query("item", "table_jkwj", function() {
+            return {
+                filters: {
+                    "name": "non-existent-item"
+                }
+            };
+        });
+    }
+}
 
 // get the total in real time as it is added to the splitting child table
 
