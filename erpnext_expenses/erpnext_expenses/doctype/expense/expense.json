@@ -7,25 +7,27 @@
  "engine": "InnoDB",
  "field_order": [
   "section_break_8yiu",
+  "paid_by",
   "expense_description",
   "category",
   "total_exchange",
   "total",
-  "paid_by",
   "column_break_jsim",
   "expense_date",
   "employee",
   "employee_name",
   "paying_account",
   "company",
+  "reference_no",
   "notes",
-  "amended_from",
   "section_break_dbzj",
   "spending_currency",
   "exchange_rate",
   "expense_splitting_section",
   "split_total",
-  "table_jkwj"
+  "table_jkwj",
+  "m\u00e1s_informaci\u00f3n_tab",
+  "amended_from"
  ],
  "fields": [
   {
@@ -82,7 +84,6 @@
    "in_standard_filter": 1,
    "label": "Total",
    "non_negative": 1,
-   "precision": "2",
    "read_only": 1
   },
   {
@@ -111,7 +112,6 @@
    "in_standard_filter": 1,
    "label": "Paid By",
    "options": "Company",
-   "read_only": 1,
    "reqd": 1
   },
   {
@@ -151,15 +151,15 @@
   {
    "fieldname": "split_total",
    "fieldtype": "Currency",
-   "label": "Total",
+   "label": "Split Total",
    "non_negative": 1,
-   "precision": "2",
    "read_only": 1
   },
   {
    "collapsible": 1,
    "fieldname": "section_break_dbzj",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Currency Exchange"
   },
   {
    "fieldname": "spending_currency",
@@ -181,14 +181,23 @@
    "label": "Total",
    "non_negative": 1,
    "options": "spending_currency",
-   "precision": "2",
    "reqd": 1
+  },
+  {
+   "fieldname": "m\u00e1s_informaci\u00f3n_tab",
+   "fieldtype": "Tab Break",
+   "label": "M\u00e1s Informaci\u00f3n"
+  },
+  {
+   "fieldname": "reference_no",
+   "fieldtype": "Data",
+   "label": "Cheque / No. de Referencia"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-11-30 15:40:43.398237",
+ "modified": "2025-12-01 15:05:05.930859",
  "modified_by": "Administrator",
  "module": "Erpnext Expenses",
  "name": "Expense",

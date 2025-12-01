@@ -7,8 +7,8 @@ from frappe import _
 
 def execute(filters=None):
 	columns = get_columns()
-	data = get_expense_data(filters)	
-	
+	data = get_expense_data(filters)
+
 	if not data:
 		return columns, [], None, None, []
 
@@ -28,8 +28,8 @@ def get_columns():
 		{"label": _("Reporte de Gasto"), "fieldname": "expense_report", "fieldtype": "Link", "options": "Expense Report", "width": "auto"},
 		{"label": _("Cuenta de Pago"), "fieldname": "paying_account", "fieldtype": "Link", "options": "Account", "width": "auto"},
 		{"label": _("Asiento Contable"), "fieldname": "journal_entry", "fieldtype": "Link", "options": "Journal Entry", "width": "auto"},
-		{"label": _("Categoría"), "fieldname": "expense_category", "fieldtype": "Link", "options": "Expense Category", "width": 150},
-		{"label": _("Descripción"), "fieldname": "description", "fieldtype": "Data", "width": 150},
+		{"label": _("Categoría"), "fieldname": "expense_category", "fieldtype": "Link", "options": "Expense Category", "width": "auto"},
+		{"label": _("Descripción"), "fieldname": "description", "fieldtype": "Data", "width": "auto"},
 		{"label": _("Monto de Gasto"), "fieldname": "amount", "fieldtype": "Currency", "width": "auto"},
 	]
 
@@ -38,7 +38,7 @@ def get_expense_data(filters):
 	Obtiene los datos de los gastos basándose en los filtros proporcionados.
 	"""
 	conditions = get_conditions(filters)
-	
+
 	data = frappe.db.sql(f"""
 		SELECT
 			er.company,
@@ -68,10 +68,10 @@ def get_conditions(filters):
 	conditions = ""
 	if filters.get("company"):
 		conditions += " AND er.company = %(company)s"
-	
+
 	if filters.get("from_date") and filters.get("to_date"):
 		conditions += " AND ed.expense_date BETWEEN %(from_date)s AND %(to_date)s"
-	
+
 	return conditions
 
 def calculate_totals(data: list[dict]) -> dict:
