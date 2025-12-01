@@ -292,7 +292,6 @@ function calculate_split_totals(frm) {
     split_total += flt(d.amount, 2) || 0;
     split_exchange += flt(d.amount_exchange, 2) || 0;
   });
-  console.log("Split Total:", split_total);
   frm.set_value({
     split_total: flt(split_total, 2),
     split_exchange: flt(split_exchange, 2),
