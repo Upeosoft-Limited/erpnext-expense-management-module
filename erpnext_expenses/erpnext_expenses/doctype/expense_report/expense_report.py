@@ -16,13 +16,13 @@ class ExpenseReport(Document):
             if not detail.expense_id:
                 continue
 
-           
+
             existing_report = frappe.db.get_value(
                 "Expense Detail",
                 filters={
                     "expense_id": detail.expense_id,
                     "parent": ["!=", self.name],
-                    "docstatus": ["!=", 2],  
+                    "docstatus": ["!=", 2],
                 },
                 fieldname="parent"
             )
@@ -214,6 +214,6 @@ def get_account_from_mode_of_payment(mode_of_payment: str, company: str) -> Opti
             "company": company,
         },
         fieldname="default_account",
-        ignore=True  
+        ignore=True
     )
     return account

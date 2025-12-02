@@ -64,7 +64,11 @@ def create_expense_report(
                     detail['expense_date'],
                     detail['category'],
                     detail['description'],
-                    detail['subtotal']
+                    detail['subtotal'],
+                    detail['total_exchange'],
+                    detail['spending_currency'],
+                    detail['exchange_rate'],
+                    detail.get('reference_no')
                 )
                 _mark_expense_as_submitted(detail['expense_id'])
         else:
@@ -74,7 +78,11 @@ def create_expense_report(
                 expense_data.expense_date,
                 expense_data.category,
                 expense_data.expense_description,
-                expense_data.total
+                expense_data.total,
+               expense_data.total_exchange,
+               expense_data.spending_currency,
+               expense_data.exchange_rate,
+               expense_data.reference_no
             )
             _mark_expense_as_submitted(expense)
 
@@ -125,7 +133,11 @@ def _get_expense_data(expense: str) -> Dict[str, Any]:
         'employee',
         'expense_date',
         'company',
-        'paid_by'
+        'total_exchange',
+        'spending_currency',
+        'exchange_rate',
+        'paid_by',
+        'reference_no'
     ]
     return frappe.db.get_all(
         'Expense',
@@ -152,7 +164,11 @@ def _add_expense_detail(
     expense_date: str,
     category: str,
     description: str,
-    subtotal: float
+    subtotal: float,
+    total_exchange: float,
+    spending_currency: str,
+    exchange_rate: float,
+    reference_no: Optional[str] = None
 ) -> None:
 
     """Agrega un Expense Detail al reporte"""
@@ -165,7 +181,11 @@ def _add_expense_detail(
         'expense_date': expense_date,
         'category': category,
         'description': description,
-        'subtotal': subtotal
+        'subtotal': subtotal,
+        'total': total_exchange,
+        'currency_reference': spending_currency,
+        'exchange_rate': exchange_rate,
+        'reference_no': reference_no
     })
     report_detail.insert()
 
@@ -179,7 +199,7 @@ def _mark_expense_as_submitted(expense_id: str) -> None:
 
 
 @frappe.whitelist()
-def create_bulk_expense_report(selected: str) -> None:
+def create_bulk_expense_report(selected: str) -> Dict[str, str]:
     json_list = json.loads(selected)
 
     if not json_list:
@@ -194,7 +214,10 @@ def create_bulk_expense_report(selected: str) -> None:
             'expense_date': expense['expense_date'],
             'category': expense['category'],
             'description': expense['expense_description'],
-            'subtotal': expense['total']
+            'subtotal': expense['total'],
+            'total_exchange': expense['total_exchange'],
+            'spending_currency': expense['spending_currency'],
+            'reference_no': expense.get('reference_no')
         })
 
-    create_expense_report(first_expense_id, details)
+    return create_expense_report(first_expense_id, details)

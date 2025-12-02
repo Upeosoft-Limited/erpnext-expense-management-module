@@ -8,7 +8,7 @@ frappe.ui.form.on("Expense Report", {
     const fields = ["paying_account", "mode_of_payment"];
 
     const set_field_state = (show, read_only) => {
-      fields.forEach(field => {
+      fields.forEach((field) => {
         frm.toggle_display(field, show);
         if (show) {
           frm.set_df_property(field, "read_only", read_only);
@@ -18,11 +18,11 @@ frappe.ui.form.on("Expense Report", {
 
     if (is_account_user) {
       if (state === "Approved") {
-        set_field_state(true, 0); 
+        set_field_state(true, 0);
       } else if (state === "Journals Created") {
         set_field_state(true, 1);
       } else {
-        set_field_state(false); 
+        set_field_state(false);
       }
     } else {
       set_field_state(true, 1);
@@ -31,14 +31,18 @@ frappe.ui.form.on("Expense Report", {
     if (frm.is_new() || frm.doc.workflow_state === "Draft") {
       frm.set_df_property("company", "read_only", 0);
       frm.set_df_property("paid_by", "read_only", 0);
+      frm.set_df_property("expense", "read_only", 0);
     } else {
       frm.set_df_property("company", "read_only", 1);
       frm.set_df_property("paid_by", "read_only", 1);
+      frm.set_df_property("expense", "read_only", 1);
     }
     frm.set_query("paying_account", function () {
       return {
         filters: {
           company: frm.doc.company,
+          is_group: 0,
+          account_type: ["not in", ["Payable", "Receivable"]],
         },
       };
     });
@@ -53,7 +57,8 @@ frappe.ui.form.on("Expense Report", {
     });
 
     if (
-      (frm.doc.workflow_state === "Approved" || frm.doc.workflow_state === "Journals Created") &&
+      (frm.doc.workflow_state === "Approved" ||
+        frm.doc.workflow_state === "Journals Created") &&
       frappe.user.has_role("Accounts User") &&
       !frm.doc.journal_entry
     ) {
@@ -66,27 +71,38 @@ frappe.ui.form.on("Expense Report", {
             ),
             indicator: "orange",
           });
-          return; 
+          return;
         }
-          frappe.dom.freeze("Generando Asientos Contables...");
-          frappe.call({
-            method:
-              "erpnext_expenses.erpnext_expenses.doctype.expense_report.expense_report.create_journal_entries",
-            args: {
-              report: frm.doc.name,
-            },
-            callback: function (r) {
-              frappe.dom.unfreeze();
-              if (!r.exc) {
-                frappe.show_alert({ message: "Asiento Contable creado exitosamente", indicator: "green",}, 5);
-                frm.reload_doc();
-              }
-            },
-            error: function (r) {
-              frappe.dom.unfreeze();
-              frappe.msgprint({ title: "Error", indicator: "red", message: "Ocurrió un error al crear el Asiento Contable. Por favor revise el log de errores.",});
-            },
-          });
+        frappe.dom.freeze("Generando Asientos Contables...");
+        frappe.call({
+          method:
+            "erpnext_expenses.erpnext_expenses.doctype.expense_report.expense_report.create_journal_entries",
+          args: {
+            report: frm.doc.name,
+          },
+          callback: function (r) {
+            frappe.dom.unfreeze();
+            if (!r.exc) {
+              frappe.show_alert(
+                {
+                  message: "Asiento Contable creado exitosamente",
+                  indicator: "green",
+                },
+                5
+              );
+              frm.reload_doc();
+            }
+          },
+          error: function (r) {
+            frappe.dom.unfreeze();
+            frappe.msgprint({
+              title: "Error",
+              indicator: "red",
+              message:
+                "Ocurrió un error al crear el Asiento Contable. Por favor revise el log de errores.",
+            });
+          },
+        });
       });
     }
   },
@@ -143,14 +159,13 @@ frappe.ui.form.on("Expense Report", {
     if (frm.doc.mode_of_payment) {
       if (!frm.doc.company) {
         frm.set_value("mode_of_payment", "");
-        frappe.throw(
-          __("Por favor, seleccione una <b>Compañía</b> primero.")
-        );
+        frappe.throw(__("Por favor, seleccione una <b>Compañía</b> primero."));
         return;
       }
 
       frappe.call({
-        method: "erpnext_expenses.erpnext_expenses.doctype.expense_report.expense_report.get_account_from_mode_of_payment",
+        method:
+          "erpnext_expenses.erpnext_expenses.doctype.expense_report.expense_report.get_account_from_mode_of_payment",
         args: {
           mode_of_payment: frm.doc.mode_of_payment,
           company: frm.doc.company,
@@ -175,6 +190,18 @@ frappe.ui.form.on("Expense Detail", {
   expense_id: function (frm, cdt, cdn) {
     const row = locals[cdt][cdn];
     if (row.expense_id) {
+      let is_duplicate = frm.doc.expense.some(
+        (d) => d.name !== cdn && d.expense_id === row.expense_id
+      );
+
+      if (is_duplicate) {
+        frappe.model.set_value(cdt, cdn, "expense_id", "");
+        frappe.throw(
+          __("El gasto {0} ya ha sido añadido a este reporte.", [row.expense_id])
+        );
+        return;
+      }
+
       frappe.call({
         method: "frappe.client.get",
         args: {
@@ -192,7 +219,36 @@ frappe.ui.form.on("Expense Detail", {
             );
             frappe.model.set_value(cdt, cdn, "category", expense_doc.category);
             frappe.model.set_value(cdt, cdn, "subtotal", expense_doc.total);
-            frappe.model.set_value(cdt, cdn,"description", expense_doc.expense_description );
+            frappe.model.set_value(
+              cdt,
+              cdn,
+              "description",
+              expense_doc.expense_description
+            );
+            frappe.model.set_value(
+              cdt,
+              cdn,
+              "currency_reference",
+              expense_doc.spending_currency
+            );
+            frappe.model.set_value(
+              cdt,
+              cdn,
+              "total",
+              expense_doc.total_exchange
+            );
+            frappe.model.set_value(
+              cdt,
+              cdn,
+              "exchange_rate",
+              expense_doc.exchange_rate
+            );
+            frappe.model.set_value(
+              cdt,
+              cdn,
+              "reference_no",
+              expense_doc.reference_no
+            );
           }
         },
       });
