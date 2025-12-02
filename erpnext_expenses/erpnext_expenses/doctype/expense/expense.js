@@ -197,48 +197,16 @@ async function recalculateAmountsForCompanyCurrency(
       return;
     }
 
-    const expense_date = frm.doc.expense_date;
-    let new_rate = null;
+    const response = await frappe.call({
+      method: "erpnext_expenses.erpnext_expenses.doctype.expense.expense.get_exchange_rate",
+      args: {
+        from_currency: frm.doc.spending_currency,
+        to_currency: company_currency,
+        date: frm.doc.expense_date,
+      },
+    });
 
-    const exact_rate = await frappe.db.get_value("Currency Exchange", {
-      from_currency: frm.doc.spending_currency,
-      to_currency: company_currency,
-      date: expense_date,
-    }, "exchange_rate");
-
-    if (exact_rate && exact_rate.message && exact_rate.message.exchange_rate) {
-      new_rate = exact_rate.message.exchange_rate;
-    } else {
-      const future_rate_list = await frappe.db.get_list("Currency Exchange", {
-        filters: {
-          from_currency: frm.doc.spending_currency,
-          to_currency: company_currency,
-          date: [">", expense_date],
-        },
-        fields: ["exchange_rate"],
-        order_by: "date asc",
-        limit: 1,
-      });
-
-      if (future_rate_list && future_rate_list.length > 0) {
-        new_rate = future_rate_list[0].exchange_rate;
-      } else {
-        const past_rate_list = await frappe.db.get_list("Currency Exchange", {
-          filters: {
-            from_currency: frm.doc.spending_currency,
-            to_currency: company_currency,
-            date: ["<", expense_date],
-          },
-          fields: ["exchange_rate"],
-          order_by: "date desc",
-          limit: 1,
-        });
-
-        if (past_rate_list && past_rate_list.length > 0) {
-          new_rate = past_rate_list[0].exchange_rate;
-        }
-      }
-    }
+    const new_rate = response.message;
 
     if (new_rate) {
       frm.set_value("exchange_rate", new_rate);
