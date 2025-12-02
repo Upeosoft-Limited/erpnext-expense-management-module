@@ -221,3 +221,37 @@ def create_bulk_expense_report(selected: str) -> Dict[str, str]:
         })
 
     return create_expense_report(first_expense_id, details)
+
+
+@frappe.whitelist()
+def get_exchange_rate(from_currency: str, to_currency: str, date: str) -> Optional[float]:
+    """
+    Busca la tasa de cambio más relevante para la moneda del gasto.
+
+    """
+    if not all([from_currency, to_currency, date]):
+        return None
+
+    exact_rate = frappe.db.get_value(
+        "Currency Exchange",
+        {"from_currency": from_currency, "to_currency": to_currency, "date": date},
+        "exchange_rate",
+    )
+    if exact_rate:
+        return exact_rate
+
+    future_rate = frappe.db.get_value(
+        "Currency Exchange",
+        {"from_currency": from_currency, "to_currency": to_currency, "date": (">", date)},
+        "exchange_rate",
+        order_by="date asc",
+    )
+    if future_rate:
+        return future_rate
+
+    return frappe.db.get_value(
+        "Currency Exchange",
+        {"from_currency": from_currency, "to_currency": to_currency, "date": ("<", date)},
+        "exchange_rate",
+        order_by="date desc",
+    )

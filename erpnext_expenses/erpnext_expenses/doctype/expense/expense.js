@@ -41,6 +41,7 @@ frappe.ui.form.on("Expense", {
 
   onload: function (frm) {
     if (frm.is_new()) {
+      frm.set_value("expense_date", frappe.datetime.nowdate());
       frappe.call({
         method:
           "erpnext_expenses.erpnext_expenses.doctype.expense.expense.get_logged_in_employee",
@@ -70,22 +71,25 @@ frappe.ui.form.on("Expense", {
         frappe.throw(__("El número de referencia solo debe contener números."));
       }
       if (frm.doc.reference_no.length < 4) {
-        frappe.throw(__("El número de referencia debe tener al menos 4 dígitos."));
+        frappe.throw(
+          __("El número de referencia debe tener al menos 4 dígitos.")
+        );
       }
     }
     let total_expense_amount = frm.doc.total;
     calculateTotalAmount(frm, total_expense_amount);
   },
 
-  table_jkwj_add: function (frm) {
-  },
+  table_jkwj_add: function (frm) {},
 
   expense_date: function (frm) {
-    if (frm.doc.expense_date > frappe.datetime.nowdate()) {
-      frappe.msgprint("La fecha del gasto no puede ser en el futuro.");
-      frappe.validated = false;
-      frm.set_value("expense_date", "");
+    if (frm.doc.expense_date) {
+      if (frm.doc.expense_date > frappe.datetime.nowdate()) {
+        frappe.msgprint("La fecha del gasto no puede ser en el futuro.");
+        frm.set_value("expense_date", null);
+      }
     }
+    frm.trigger("spending_currency");
   },
 
   spending_currency: async function (frm) {
@@ -110,7 +114,6 @@ frappe.ui.form.on("Expense", {
   exchange_rate: function (frm) {
     calculate_total_in_company_currency(frm);
   },
-
 });
 
 async function recalculateAmountsForCompanyCurrency(
@@ -181,20 +184,31 @@ async function recalculateAmountsForCompanyCurrency(
     }
   } else {
     frm.toggle_display("total", true);
-    const r = await frappe.call({
-      method: "frappe.client.get_value",
+
+    if (!frm.doc.expense_date) {
+      frappe.msgprint({
+        title: __("Fecha Requerida"),
+        indicator: "red",
+        message: __(
+          'Por favor, seleccione la "Fecha del Gasto" para poder obtener la tasa de cambio.'
+        ),
+      });
+      frm.set_value("exchange_rate", 0);
+      return;
+    }
+
+    const response = await frappe.call({
+      method: "erpnext_expenses.erpnext_expenses.doctype.expense.expense.get_exchange_rate",
       args: {
-        doctype: "Currency Exchange",
-        filters: {
-          from_currency: frm.doc.spending_currency,
-          to_currency: company_currency,
-        },
-        fieldname: ["exchange_rate"],
+        from_currency: frm.doc.spending_currency,
+        to_currency: company_currency,
+        date: frm.doc.expense_date,
       },
     });
 
-    if (r.message && r.message.exchange_rate) {
-      const new_rate = r.message.exchange_rate;
+    const new_rate = response.message;
+
+    if (new_rate) {
       frm.set_value("exchange_rate", new_rate);
 
       if (old_rate == 1 && old_total_exchange > 0 && new_rate > 0) {
@@ -207,7 +221,8 @@ async function recalculateAmountsForCompanyCurrency(
       (frm.doc.table_jkwj || []).forEach((row) => {
         if (row.amount > 0 && new_rate > 0) {
           let new_amount_exchange = flt(
-            row.amount / new_rate, precision("amount_exchange", row)
+            row.amount / new_rate,
+            precision("amount_exchange", row)
           );
           frappe.model.set_value(
             row.doctype,
@@ -276,11 +291,13 @@ frappe.ui.form.on(
   "amount_exchange",
   function (frm, cdt, cdn) {
     let row = locals[cdt][cdn];
-    let new_amount = flt(
-      row.amount_exchange * frm.doc.exchange_rate,
-      precision("amount", row)
-    );
-    frappe.model.set_value(cdt, cdn, "amount", new_amount);
+    if (frm.doc.exchange_rate > 0) {
+      let new_amount = flt(
+        row.amount_exchange * frm.doc.exchange_rate,
+        precision("amount", row)
+      );
+      frappe.model.set_value(cdt, cdn, "amount", new_amount);
+    }
     calculate_split_totals(frm);
   }
 );
@@ -326,10 +343,7 @@ function calculateTotalAmount(frm, total_expense_amount) {
 
 function calculate_total_in_company_currency(frm) {
   if (frm.doc.total_exchange != null && frm.doc.exchange_rate != null) {
-    let total = flt(
-      frm.doc.total_exchange * frm.doc.exchange_rate,
-      2
-    );
+    let total = flt(frm.doc.total_exchange * frm.doc.exchange_rate, 2);
     frm.set_value("total", total);
   }
 }
