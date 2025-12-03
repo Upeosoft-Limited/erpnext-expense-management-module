@@ -16,14 +16,15 @@ frappe.ui.form.on("Expense Report", {
       });
     };
 
-    if (is_account_user) {
-      if (state === "Approved") {
-        set_field_state(true, 0);
-      } else if (state === "Journals Created") {
-        set_field_state(true, 1);
-      } else {
-        set_field_state(false);
-      }
+    if (is_account_user && state === "Approved") {
+      set_field_state(true, 0);
+    } else if (
+      state === "Draft" ||
+      state === "Pending Manager" ||
+      state === "Pending Finance" ||
+      state === "Rejected"
+    ) {
+      set_field_state(false);
     } else {
       set_field_state(true, 1);
     }

@@ -43,12 +43,13 @@ class ExpenseReport(Document):
                 if je_doc.docstatus == 1:  # Solo si está enviado
                     # Ignorar validación de links para evitar dependencia circular
                     je_doc.flags.ignore_links = True
-                    self.journal_entry = None
                     je_doc.cancel()
                     frappe.msgprint(f"El Asiento Contable {journal_entry} ha sido cancelado")
             except Exception as e:
                 frappe.log_error(f"Error cancelando Asiento Contable {journal_entry}: {str(e)}")
                 frappe.throw(f"No se pudo cancelar el Asiento Contable {journal_entry}. Por favor cancélelo manualmente.")
+        self.journal_entry = None
+        frappe.db.set_value(self.doctype, self.name, "journal_entry", None, update_modified=False)
 
 
 @frappe.whitelist()
