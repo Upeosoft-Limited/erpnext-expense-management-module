@@ -462,7 +462,8 @@
     "url": null
    }
   ],
-  "title": "Home"
+  "title": "Home",
+  "type": "Workspace"
  },
  {
   "charts": [
@@ -1241,7 +1242,8 @@
     "url": null
    }
   ],
-  "title": "CRM"
+  "title": "CRM",
+  "type": "Workspace"
  },
  {
   "charts": [
@@ -2342,7 +2344,8 @@
     "url": null
    }
   ],
-  "title": "Selling"
+  "title": "Selling",
+  "type": "Workspace"
  },
  {
   "charts": [
@@ -3289,7 +3292,8 @@
     "url": null
    }
   ],
-  "title": "Buying"
+  "title": "Buying",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -3754,7 +3758,8 @@
     "url": null
    }
   ],
-  "title": "Website"
+  "title": "Website",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -4373,7 +4378,8 @@
     "url": null
    }
   ],
-  "title": "Tools"
+  "title": "Tools",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -4719,7 +4725,8 @@
     "url": null
    }
   ],
-  "title": "Users"
+  "title": "Users",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -5086,7 +5093,8 @@
   "roles": [],
   "sequence_id": 20.0,
   "shortcuts": [],
-  "title": "Integrations"
+  "title": "Integrations",
+  "type": "Workspace"
  },
  {
   "charts": [
@@ -6229,7 +6237,8 @@
     "url": null
    }
   ],
-  "title": "Accounting"
+  "title": "Accounting",
+  "type": "Workspace"
  },
  {
   "charts": [
@@ -7621,7 +7630,8 @@
     "url": null
    }
   ],
-  "title": "Stock"
+  "title": "Stock",
+  "type": "Workspace"
  },
  {
   "charts": [
@@ -8010,7 +8020,8 @@
     "url": null
    }
   ],
-  "title": "Assets"
+  "title": "Assets",
+  "type": "Workspace"
  },
  {
   "charts": [
@@ -8431,7 +8442,8 @@
     "url": null
    }
   ],
-  "title": "Projects"
+  "title": "Projects",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -8779,7 +8791,8 @@
     "url": null
    }
   ],
-  "title": "Support"
+  "title": "Support",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -9124,7 +9137,8 @@
     "url": null
    }
   ],
-  "title": "Quality"
+  "title": "Quality",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -9805,7 +9819,8 @@
     "url": null
    }
   ],
-  "title": "Manufacturing"
+  "title": "Manufacturing",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -10223,7 +10238,8 @@
     "url": "https://frappecloud.com/marketplace"
    }
   ],
-  "title": "ERPNext Integrations"
+  "title": "ERPNext Integrations",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -11060,7 +11076,8 @@
     "url": null
    }
   ],
-  "title": "ERPNext Settings"
+  "title": "ERPNext Settings",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -11407,7 +11424,8 @@
     "url": null
    }
   ],
-  "title": "Payables"
+  "title": "Payables",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -11837,7 +11855,8 @@
     "url": null
    }
   ],
-  "title": "Receivables"
+  "title": "Receivables",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -12255,7 +12274,8 @@
   "roles": [],
   "sequence_id": 5.0,
   "shortcuts": [],
-  "title": "Financial Reports"
+  "title": "Financial Reports",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -12346,7 +12366,8 @@
     "url": null
    }
   ],
-  "title": "Expenses"
+  "title": "Expenses",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -12996,7 +13017,8 @@
     "url": null
    }
   ],
-  "title": "Build"
+  "title": "Build",
+  "type": "Workspace"
  },
  {
   "charts": [],
@@ -13022,6 +13044,7 @@
   "roles": [],
   "sequence_id": 22.0,
   "shortcuts": [],
-  "title": "Welcome Workspace"
+  "title": "Welcome Workspace",
+  "type": "Workspace"
  }
 ]
