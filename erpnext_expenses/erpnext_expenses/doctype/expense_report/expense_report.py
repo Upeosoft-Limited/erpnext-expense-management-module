@@ -10,6 +10,9 @@ class ExpenseReport(Document):
 @frappe.whitelist()
 def create_journal_entries(report):
     try:
+        if frappe.db.exists("Journal Entry", {"user_remark": ["like", f"Expense Report: {report}%"]}):
+            return
+
         fields = [
             'company',
             'paying_account'
@@ -50,7 +53,7 @@ def create_journal_entries(report):
         jv.naming_series = 'ACC-JV-.YYYY.-'
         jv.posting_date = nowdate()
         jv.company = expense_report.company
-        jv.remark = expense_report.description
+        jv.user_remark = f"Expense Report: {report}"
 
         # Entry to the Credit Side
         jv.append('accounts', {

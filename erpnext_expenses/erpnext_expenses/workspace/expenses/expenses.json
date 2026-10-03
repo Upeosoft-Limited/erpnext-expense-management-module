@@ -1,7 +1,8 @@
 {
+ "app": "erpnext_expenses",
  "charts": [],
- "content": "[{\"id\":\"1KG5Mc2zmz\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Expenses</span>\",\"col\":12}},{\"id\":\"Yy2SH5NS5k\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expense\",\"col\":3}},{\"id\":\"WcDNIeA9xC\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expense Report\",\"col\":3}},{\"id\":\"woSHdbpbaC\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expense Category\",\"col\":3}},{\"id\":\"wb3g8Pncbe\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expense Taxes\",\"col\":3}}]",
- "creation": "2024-03-30 00:14:20.639580",
+ "content": "[{\"id\":\"1KG5Mc2zmz\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Expenses</span>\",\"col\":12}},{\"id\":\"Yy2SH5NS5k\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Expense\",\"col\":3}}]",
+ "creation": "2025-09-30 10:47:49.131469",
  "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
@@ -12,8 +13,8 @@
  "is_hidden": 0,
  "label": "Expenses",
  "links": [],
- "modified": "2024-03-30 00:16:49.177302",
- "modified_by": "Administrator",
+ "modified": "2025-09-30 13:05:16.887204",
+ "modified_by": "kanaekwe@gmail.com",
  "module": "Erpnext Expenses",
  "name": "Expenses",
  "number_cards": [],
@@ -31,31 +32,8 @@
    "link_to": "Expense",
    "stats_filter": "[]",
    "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Expense Report",
-   "link_to": "Expense Report",
-   "stats_filter": "[]",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Expense Category",
-   "link_to": "Expense Category",
-   "stats_filter": "[]",
-   "type": "DocType"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Expense Taxes",
-   "link_to": "Expense Taxes",
-   "stats_filter": "[]",
-   "type": "DocType"
   }
  ],
- "title": "Expenses"
+ "title": "Expenses",
+ "type": "Workspace"
 }

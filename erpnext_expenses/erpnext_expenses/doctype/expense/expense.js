@@ -46,7 +46,6 @@ frappe.ui.form.on("Expense", {
                 callback: function(response) {
                     if (response.message) {
                         frm.set_value('employee', response.message.employee);
-                        frm.set_value('employee_name', response.message.employee_name);
                     }
                 }
             });

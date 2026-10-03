@@ -229,12 +229,43 @@ app_license = "mit"
 
 
 fixtures = [
-    "Client Script",
-    "Custom Field",
-	"Print Format",
-	"Property Setter",
-    "Workspace",
-    "Workflow State",
-    "Workflow Action Master",
-    "Workflow"
+    {"dt": "Custom Field", "filters": [["dt", "in", ["Expense", "Expense Report"]]]},
+    {"dt": "Client Script", "filters": [["module", "=", "Erpnext Expenses"]]},
+    {"dt": "Workspace", "filters": [["module", "=", "Erpnext Expenses"]]},
+    {"dt": "Workflow", "filters": [["name", "in", ["Expense", "Expense Report"]]]},
+    {
+        "dt": "Workflow State",
+        "filters": [
+            [
+                "name",
+                "in",
+                [
+                    "Draft",
+                    "Rejected",
+                    "Pending Finance",
+                    "Pending Journal Entry",
+                    "Journals Created",
+                    "Approved",
+                    "Submitted",
+                ],
+            ]
+        ],
+    },
+    {
+        "dt": "Workflow Action Master",
+        "filters": [
+            [
+                "name",
+                "in",
+                [
+                    "Submit to Finance",
+                    "Recall",
+                    "Approve",
+                    "Reject",
+                    "Create Journal Entries",
+                    "Submit",
+                ],
+            ]
+        ],
+    },
 ]
